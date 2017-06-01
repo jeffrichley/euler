@@ -34,7 +34,6 @@ public class Answer022 {
 			
 			for (int j = 0; j < name.length(); j++) {
 				int tmp = name.charAt(j) - 64;
-				String letter = name.substring(j, j+1);
 				value += tmp;
 			}
 			

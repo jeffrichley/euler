@@ -1,9 +1,8 @@
 package com.infinity.euler.num010;
 
 import java.util.Calendar;
-import java.util.Date;
 
-public class Answer19 {
+public class Answer019 {
 
 	public static void main(String[] args) {
 		

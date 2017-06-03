@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Answer23 {
+public class Answer023 {
 
 private static final int NUM_TO_STOP = 28123;
 	

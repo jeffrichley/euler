@@ -1,7 +1,5 @@
 package com.infinity.euler.num030;
 
-import java.math.BigInteger;
-
 public class Answer030 {
 
 	public static void main(String[] args) {

@@ -50,7 +50,7 @@ public class Answer084 {
 				processChance();
 			}
 			
-			// now that we have done all the adjustments, make the space as visited
+			// now that we have done all the adjustments, mark the space as visited
 			currentLocation.visit();
 		}
 		
@@ -72,9 +72,12 @@ public class Answer084 {
 		});
 		
 		System.out.println();
-		System.out.println(allSpaces.get(0).name + " " + (double) allSpaces.get(0).numVisits / (double) NUM_ROLLS);
-		System.out.println(allSpaces.get(1).name + " " + (double) allSpaces.get(1).numVisits / (double) NUM_ROLLS);
-		System.out.println(allSpaces.get(2).name + " " + (double) allSpaces.get(2).numVisits / (double) NUM_ROLLS);
+//		System.out.println(allSpaces.get(0).name + " " + (double) allSpaces.get(0).numVisits / (double) NUM_ROLLS);
+//		System.out.println(allSpaces.get(1).name + " " + (double) allSpaces.get(1).numVisits / (double) NUM_ROLLS);
+//		System.out.println(allSpaces.get(2).name + " " + (double) allSpaces.get(2).numVisits / (double) NUM_ROLLS);
+		for (Space space : allSpaces) {
+			System.out.println(space.name + " " + (double) space.getNumVisits() / (double) NUM_ROLLS);
+		}
 	}
 	
 	private void processChance() {
@@ -106,9 +109,17 @@ public class Answer084 {
 			currentLocation = nextU;
 		} else if (card.name.equals("BACK-3")) {
 			currentLocation = currentLocation.previousSpace.previousSpace.previousSpace;
+			
+			// we might land on a community chest if we were on CH3
+			if (currentLocation.name.startsWith("CC")) {
+				processComunityChest();
+			} else if (currentLocation.name.equals("G2J")) {
+				// might also land on go to jail
+				currentLocation = board.JAIL;
+			}
 		}
 	}
-
+	
 	private void processComunityChest() {
 		Card card = board.takeCommunityChestCard();
 		
@@ -124,11 +135,17 @@ public class Answer084 {
 		lastThreeRolls[1] = lastThreeRolls[2];
 		lastThreeRolls[2] = diceRoll;
 		
-		return (lastThreeRolls[0] == lastThreeRolls[1]) && (lastThreeRolls[1] == lastThreeRolls[2]);
+		boolean badRoll = (lastThreeRolls[0] == lastThreeRolls[1]) && (lastThreeRolls[1] == lastThreeRolls[2]);
+		
+		if (badRoll) {
+			lastThreeRolls = new int[] {20, 30, 40};
+		}
+		
+		return badRoll;
 	}
 
 	private int getRoll() {
-		return r.nextInt(6) + 1 + r.nextInt(6) + 1;
+		return r.nextInt(NUM_DICE_SIDES) + 1 + r.nextInt(NUM_DICE_SIDES) + 1;
 	}
 
 	public static void main(String[] args) {
@@ -261,7 +278,9 @@ public class Answer084 {
 			ccCards.add(new Card(""));
 			ccCards.add(new Card(""));
 			
-			Collections.shuffle(ccCards);
+			for (int i = 0; i < 7; i++) {
+				Collections.shuffle(ccCards);
+			}
 			
 			// create chance cards
 			List<Card> chanceCards = new ArrayList<>();
@@ -282,7 +301,9 @@ public class Answer084 {
 			chanceCards.add(new Card(""));
 			chanceCards.add(new Card(""));
 			
-			Collections.shuffle(chanceCards);
+			for (int i = 0; i < 7; i++) {
+				Collections.shuffle(chanceCards);
+			}
 			
 			// link the cccards
 			for (int i = 0; i < ccCards.size() - 1; i++) {

@@ -8,7 +8,7 @@ import java.util.Random;
 
 public class Answer084 {
 	
-	private static final int NUM_DICE_SIDES = 6;
+	private static final int NUM_DICE_SIDES = 4;
 	private static final int NUM_ROLLS = 10000000;
 	private static final Random r = new Random(System.currentTimeMillis());
 	
@@ -139,7 +139,10 @@ public class Answer084 {
 		
 		if (badRoll) {
 			lastThreeRolls = new int[] {20, 30, 40};
+		} else if (lastThreeRolls[2] != lastThreeRolls[1]) {
+			lastThreeRolls = new int[] {20, 30, 40};
 		}
+			
 		
 		return badRoll;
 	}

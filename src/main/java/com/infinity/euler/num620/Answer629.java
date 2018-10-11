@@ -1,7 +1,9 @@
 package com.infinity.euler.num620;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 /**
  * @author Jeffrey.Richley
@@ -26,7 +28,7 @@ public class Answer629 {
 		// all of the options and calculate if it would be winning or not
 		long numWinners = calculateWinners(nimbers);
 		
-		System.out.println();
+//		System.out.println();
 		
 //		printArray(nimbers);
 	}
@@ -98,8 +100,76 @@ public class Answer629 {
 	}
 
 	private static long calculateWinners(int[][] nimbers) {
-		// TODO Auto-generated method stub
-		return 0;
+		
+		// Let g(n) be the sum of f(n,k) over all 2 ≤ k ≤ n.
+		long g = 0;
+		int n = NUM_ROCKS;
+		
+		for (int numPiles = 1; numPiles <= MAX_PILES; numPiles++) {
+			System.out.println(numPiles + " piles");
+
+			// create the piles
+			int[] piles = new int[numPiles];
+			
+			// initialize it with all ones to start
+			Arrays.fill(piles, 1);
+
+			boolean stillGood = true;
+			while (stillGood) {
+				// set up the first one
+				int bigone = n - IntStream.of(piles).sum();
+				
+				if (bigone == 0 && numPiles != MAX_PILES) {
+					break;
+				}
+				
+				piles[piles.length-1] += bigone;
+
+				printArray(piles);
+				
+				if (piles.length > 1) {
+					// work through the last two
+					while (piles[piles.length-1] - 1 >= piles[piles.length-2] + 1) {
+						piles[piles.length-1]--;
+						piles[piles.length-2]++;
+						printArray(piles);
+					}
+					
+				}
+
+				if (piles.length > 2) {
+					for (int i = piles.length - 2; i >= 1; ) {
+						if (piles[i] - 1 >= piles[i-1] + 1) {
+							piles[i]--;
+							piles[i-1]++;
+							piles[piles.length-1] = 1;
+							break;
+						}
+						
+						if (piles[piles.length-1] > piles[piles.length-2]) {
+							int target = piles[piles.length-1] - 1;
+
+							for (int j = piles.length-2; j >= 0; j--) {
+								if (piles[j] < target) {
+									piles[j]++;
+									piles[piles.length-1] = 1;
+									break;
+								}
+							}
+							
+							break;
+						}
+
+						stillGood = false;
+						break;
+					}
+				} else {
+					stillGood = false;
+				}
+			}
+		}
+		
+		return g;
 	}
 
 	private static void printArray(int[][] array) {

@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.IntStream;
 
+import com.infinity.euler.util.Tick;
+
 /**
  * @author Jeffrey.Richley
  * 
@@ -16,17 +18,26 @@ import java.util.stream.IntStream;
  */
 public class Answer629 {
 
-	public static final int NUM_ROCKS = 200;
+	public static final int NUM_ROCKS = 5;
 	public static final int MAX_PILES = NUM_ROCKS;
 	
 	public static void main(String[] args) {
 		
+		Tick t = new Tick();
+		
 		// first we need to calculate the nimbers for each partition
 		int[][] nimbers = getGrundyNimbers();
 		
+		t.tick("Finished Grundy Numbers");
+		
 		// now that we have the nimbers, we can iterate through
 		// all of the options and calculate if it would be winning or not
+		
 		long numWinners = calculateWinners(nimbers);
+		
+		t.tick("Finished calculating winners");
+		
+		System.out.println("Number of winners: " + numWinners);
 		
 //		System.out.println();
 		
@@ -106,7 +117,7 @@ public class Answer629 {
 		int n = NUM_ROCKS;
 		
 		for (int numPiles = 1; numPiles <= MAX_PILES; numPiles++) {
-			System.out.println(numPiles + " piles");
+//			System.out.println(numPiles + " piles");
 
 			// create the piles
 			int[] piles = new int[numPiles];
@@ -125,14 +136,16 @@ public class Answer629 {
 				
 				piles[piles.length-1] += bigone;
 
-				printArray(piles);
+//				printArray(piles);
+				g += getWinnersForCombination(piles, n);
 				
 				if (piles.length > 1) {
 					// work through the last two
 					while (piles[piles.length-1] - 1 >= piles[piles.length-2] + 1) {
 						piles[piles.length-1]--;
 						piles[piles.length-2]++;
-						printArray(piles);
+//						printArray(piles);
+						g += getWinnersForCombination(piles, n);;
 					}
 					
 				}
@@ -142,6 +155,12 @@ public class Answer629 {
 						if (piles[i] - 1 >= piles[i-1] + 1) {
 							piles[i]--;
 							piles[i-1]++;
+							
+							// 3 piles needs 226
+							for (int j = i; j < piles.length-1; j++) {
+								piles[j] = piles[i-1];
+							}
+							
 							piles[piles.length-1] = 1;
 							break;
 						}
@@ -152,6 +171,17 @@ public class Answer629 {
 							for (int j = piles.length-2; j >= 0; j--) {
 								if (piles[j] < target) {
 									piles[j]++;
+									
+									
+									
+									// 3 piles needs 226
+									for (int t = j+1; t < piles.length-1; t++) {
+										piles[t] = piles[j];
+									}
+									
+									
+									
+									
 									piles[piles.length-1] = 1;
 									break;
 								}
@@ -170,6 +200,19 @@ public class Answer629 {
 		}
 		
 		return g;
+	}
+
+	private static long getWinnersForCombination(int[] piles, int n) {
+		
+		printArray(piles);
+		
+		long winners = 0;
+		
+		for (int k = 2; k <= n; k++) {
+			
+		}
+		
+		return winners;
 	}
 
 	private static void printArray(int[][] array) {

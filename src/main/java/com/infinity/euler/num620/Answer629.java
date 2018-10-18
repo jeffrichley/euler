@@ -3,6 +3,7 @@ package com.infinity.euler.num620;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.IntStream;
 
 import com.infinity.euler.util.Tick;
@@ -18,7 +19,7 @@ import com.infinity.euler.util.Tick;
  */
 public class Answer629 {
 
-	public static final int NUM_ROCKS = 5;
+	public static final int NUM_ROCKS = 10;
 	public static final int MAX_PILES = NUM_ROCKS;
 	
 	public static void main(String[] args) {
@@ -27,6 +28,8 @@ public class Answer629 {
 		
 		// first we need to calculate the nimbers for each partition
 		int[][] nimbers = getGrundyNimbers();
+
+//		printArray(nimbers);
 		
 		t.tick("Finished Grundy Numbers");
 		
@@ -39,9 +42,122 @@ public class Answer629 {
 		
 		System.out.println("Number of winners: " + numWinners);
 		
-//		System.out.println();
 		
-//		printArray(nimbers);
+		long answer = numWinners % ((long)(Math.pow(10, 9) + 7));
+		
+		System.out.println("The answer = " + answer);
+		
+	}
+
+	private static long numWinners = 0;
+
+	private static long calculateWinners(int[][] nimbers) {
+		
+		CountDownLatch latch = new CountDownLatch(NUM_ROCKS);
+		
+		for (int numPiles = 1; numPiles <= MAX_PILES; numPiles++) {
+			
+			final int num = numPiles;
+			
+			Runnable r = new Runnable() {
+				
+				@Override
+				public void run() {
+					
+					Tick t = new Tick();
+					
+//					System.out.print("Working pile #" + num);
+					
+					int[] piles = new int[num];
+					
+					// degenerate case with all 1's and a final number
+					Arrays.fill(piles, 1);
+					piles[piles.length-1] += NUM_ROCKS - IntStream.of(piles).sum();
+					
+//			printArray(piles);
+					numWinners += getWinnersForCombination(piles, nimbers, MAX_PILES);
+					
+					numWinners += getNextPerm(piles, 0, nimbers);
+					
+					latch.countDown();
+
+					t.tick("pile #"+num+" took ");
+					System.out.println("There are " + latch.getCount() + " more");
+				}
+			};
+			
+			new Thread(r).start();
+		}
+		
+		try {
+			latch.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		return numWinners;
+	}
+	
+	private static long getNextPerm(int[] piles, int updateIndex, int[][] nimbers) {
+		
+		long numWinners = 0;
+		
+		if (updateIndex == piles.length-1) {
+			return 0;
+		}
+		
+//		int[] piles = Arrays.copyOf(originalPiles, originalPiles.length);
+		
+		while (updateIndex+1 < piles.length && piles[updateIndex] < piles[piles.length-1] -1) {
+			
+			numWinners += getNextPerm(piles, updateIndex+1, nimbers);
+			
+			piles[updateIndex]++;
+			int updatedValue = piles[updateIndex];
+			for (int i = updateIndex+1; i < piles.length; i++) {
+				piles[i] = updatedValue;
+			}
+			
+			piles[piles.length-1] = 0;
+			int sum = NUM_ROCKS - IntStream.of(piles).sum();
+			if (sum >= 0 && sum >= piles[piles.length-2]) {
+				piles[piles.length-1] = sum;
+//				printArray(piles);
+				numWinners += getWinnersForCombination(piles, nimbers, MAX_PILES);
+			}
+			
+		}
+		
+		return numWinners;
+	}
+
+
+	private static long getWinnersForCombination(int[] piles, int[][] nimbers, int n) {
+		
+//		printArray(piles);
+		
+		
+		return 0;
+		
+//		long winners = 0;
+//		
+//		// go from 2 to n size looking to see if it is a 
+//		// winning combo for that combination of piles
+//		for (int k = 2; k <= n; k++) {
+//			
+//			int answer = 0;
+//			
+//			for (int i = 0; i < piles.length; i++) {
+//				int nimber = nimbers[piles[i]][k];
+//				answer ^= nimber;
+//			}
+//			
+//			if (answer != 0) {
+//				winners++;
+//			}
+//		}
+//		
+//		return winners;
 	}
 
 	private static int[][] getGrundyNimbers() {
@@ -110,110 +226,97 @@ public class Answer629 {
 		return mex;
 	}
 
-	private static long calculateWinners(int[][] nimbers) {
-		
-		// Let g(n) be the sum of f(n,k) over all 2 ≤ k ≤ n.
-		long g = 0;
-		int n = NUM_ROCKS;
-		
-		for (int numPiles = 1; numPiles <= MAX_PILES; numPiles++) {
-//			System.out.println(numPiles + " piles");
-
-			// create the piles
-			int[] piles = new int[numPiles];
-			
-			// initialize it with all ones to start
-			Arrays.fill(piles, 1);
-
-			boolean stillGood = true;
-			while (stillGood) {
-				// set up the first one
-				int bigone = n - IntStream.of(piles).sum();
-				
-				if (bigone == 0 && numPiles != MAX_PILES) {
-					break;
-				}
-				
-				piles[piles.length-1] += bigone;
-
-//				printArray(piles);
-				g += getWinnersForCombination(piles, n);
-				
-				if (piles.length > 1) {
-					// work through the last two
-					while (piles[piles.length-1] - 1 >= piles[piles.length-2] + 1) {
-						piles[piles.length-1]--;
-						piles[piles.length-2]++;
-//						printArray(piles);
-						g += getWinnersForCombination(piles, n);;
-					}
-					
-				}
-
-				if (piles.length > 2) {
-					for (int i = piles.length - 2; i >= 1; ) {
-						if (piles[i] - 1 >= piles[i-1] + 1) {
-							piles[i]--;
-							piles[i-1]++;
-							
-							// 3 piles needs 226
-							for (int j = i; j < piles.length-1; j++) {
-								piles[j] = piles[i-1];
-							}
-							
-							piles[piles.length-1] = 1;
-							break;
-						}
-						
-						if (piles[piles.length-1] > piles[piles.length-2]) {
-							int target = piles[piles.length-1] - 1;
-
-							for (int j = piles.length-2; j >= 0; j--) {
-								if (piles[j] < target) {
-									piles[j]++;
-									
-									
-									
-									// 3 piles needs 226
-									for (int t = j+1; t < piles.length-1; t++) {
-										piles[t] = piles[j];
-									}
-									
-									
-									
-									
-									piles[piles.length-1] = 1;
-									break;
-								}
-							}
-							
-							break;
-						}
-
-						stillGood = false;
-						break;
-					}
-				} else {
-					stillGood = false;
-				}
-			}
-		}
-		
-		return g;
-	}
-
-	private static long getWinnersForCombination(int[] piles, int n) {
-		
-		printArray(piles);
-		
-		long winners = 0;
-		
-		for (int k = 2; k <= n; k++) {
-			
-		}
-		
-		return winners;
-	}
+//	private static long calculateWinners(int[][] nimbers) {
+//		
+//		// Let g(n) be the sum of f(n,k) over all 2 ≤ k ≤ n.
+//		long g = 0;
+//		int n = NUM_ROCKS;
+//		
+//		for (int numPiles = 1; numPiles <= MAX_PILES; numPiles++) {
+//			// System.out.println(numPiles + " piles");
+//
+//			// create the piles
+//			int[] piles = new int[numPiles];
+//			
+//			// initialize it with all ones to start
+//			Arrays.fill(piles, 1);
+//
+//			boolean stillGood = true;
+//			while (stillGood) {
+//				// set up the first one
+//				int bigone = n - IntStream.of(piles).sum();
+//				
+//				if (bigone == 0 && numPiles != MAX_PILES) {
+//					break;
+//				}
+//				
+//				piles[piles.length-1] += bigone;
+//
+////				printArray(piles);
+//				g += getWinnersForCombination(piles, nimbers, n);
+//				
+//				if (piles.length > 1) {
+//					// work through the last two
+//					while (piles[piles.length-1] - 1 >= piles[piles.length-2] + 1) {
+//						piles[piles.length-1]--;
+//						piles[piles.length-2]++;
+////						printArray(piles);
+//						g += getWinnersForCombination(piles, nimbers, n);;
+//					}
+//					
+//				}
+//
+//				if (piles.length > 2) {
+//					for (int i = piles.length - 2; i >= 1; ) {
+//						if (piles[i] - 1 >= piles[i-1] + 1) {
+//							piles[i]--;
+//							piles[i-1]++;
+//							
+//							// 3 piles needs 226
+//							for (int j = i; j < piles.length-1; j++) {
+//								piles[j] = piles[i-1];
+//							}
+//							
+//							piles[piles.length-1] = 1;
+//							break;
+//						}
+//						
+//						if (piles[piles.length-1] > piles[piles.length-2]) {
+//							int target = piles[piles.length-1] - 1;
+//
+//							for (int j = piles.length-2; j >= 0; j--) {
+//								if (piles[j] < target) {
+//									piles[j]++;
+//									
+//									
+//									
+//									// 3 piles needs 226
+//									for (int t = j+1; t < piles.length-1; t++) {
+//										piles[t] = piles[j];
+//									}
+//									
+//									
+//									
+//									
+//									piles[piles.length-1] = 1;
+//									break;
+//								}
+//							}
+//							
+//							break;
+//						}
+//
+//						stillGood = false;
+//						break;
+//					}
+//				} else {
+//					stillGood = false;
+//				}
+//			}
+//		}
+//		
+//		return g;
+//	}
 
 	private static void printArray(int[][] array) {
 		int length = array.length;
